@@ -1,0 +1,43 @@
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  name: nginx-cronjob-backup
+  namespace: nginx
+spec:
+  schedule: "*/2 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: nginx-pod
+          labels:
+            app: nginx-cronjob-evrymin
+        spec:
+          containers:
+          - name: backup-nginx-container
+            image: busybox:latest
+            command: 
+            - sh
+            - -c
+            - >
+              echo "Nginx Backup Jobs started";
+              mkdir -p /backups && 
+              mkdir -p /data &&
+              cp -r /data /backups && 
+              echo "Backup Completed"
+            volumeMounts:
+              - name: data-volume
+                mountPath: /data
+              - name: backup-volume
+                mountPath: /backups  
+          restartPolicy: OnFailure
+          volumes:
+           - name: data-volume
+             hostPath:
+               path: /data
+               type: DirectoryOrCreate  
+           - name: backup-volume
+             hostPath:
+               path: /backups
+               type: DirectoryOrCreate
+
